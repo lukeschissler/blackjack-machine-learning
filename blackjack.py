@@ -1,5 +1,5 @@
 from random import shuffle
-from AIs import random_ai
+from AIs import dealer_ai
 
 
 class Card:
@@ -49,10 +49,9 @@ class Player:
 
 class BlackJack:
     def __init__(self, players, deck_num=1, turns=1, cash = 500, ante=50, double_down = 0) -> None:
-        self.players = [Player(x, cash) for x in players] + [Player('Dealer', cash)]
+        self.players = [Player(x, cash) for x in players]
         self.deck_num = deck_num
-        self.ais = [random_ai]
-        self.score_card = {player : []  for player in self.players}
+        self.ais = [dealer_ai]
         self.turns = turns
         self.deck = Deck(deck_num)
         self.ante = ante
@@ -104,6 +103,7 @@ class BlackJack:
                     player.ante[h] += self.ante
                     player.cash -= self.ante
 
+
             while True:
 
                 if not dd:
@@ -116,16 +116,16 @@ class BlackJack:
                     break
 
                 if 21 in hand_sum:
-                    print(f"Your hand is: {player.hands[h]}. Your sum is 21.")
+                    print(f"{player.name}\'s hand is: {player.hands[h]}. Your sum is 21.")
                     break
                 elif all(j > 21 for j in hand_sum):
-                    print(f"Your hand is {player.hands[h]}. You busted at {hand_sum}")
+                    print(f"{player.name}\'s hand is {player.hands[h]}. You busted at {hand_sum}")
                     break
                 elif dd:
-                    print(f"Your hand is: {player.hands[h]}, sum: {hand_sum}. You double-downed and cannot hit again.")
+                    print(f"{player.name}\'s hand is: {player.hands[h]}, sum: {hand_sum}. You double-downed and cannot hit again.")
                     break
                 else:
-                    print(f"Your hand is: {player.hands[h]}. Possible sums: {hand_sum}")
+                    print(f"{player.name}\'s hand is: {player.hands[h]}. Possible sums: {hand_sum}")
 
             hand_sums = [x for x in self.sum_hand(player.hands[h]) if x < 22]
 
@@ -135,40 +135,39 @@ class BlackJack:
                 player.score_card.append(max(hand_sums))
 
 
-    """
-    def ai_play(self, ai) -> None:
+    def ai_play(self, ai_player) -> None:
         while True:
 
-            hit = ai()
+            hit = ai_player.name(self.sum_hand(ai_player.hands[-1]))
 
             if hit:
-                self.game_state[ai].append(self.deck.deck.pop())
-                hand = self.game_state[ai]
-                hand_sum = self.sum_hand(hand)
+                ai_player.hands[-1] += self.deck.deal(1)
+                hand_sum = self.sum_hand(ai_player.hands[-1])
             else:
                 break
 
-            if 21 in hand_sum:
-                break
-            elif all(i > 21 for i in hand_sum):
+            if 21 in hand_sum or all(j > 21 for j in hand_sum):
                 break
             else:
                 pass
 
-        if self.turns == 1:
-            print(f"{ai.__name__}'s final hand is {self.game_state[ai]}")
-    """
+        hand_sums = [x for x in self.sum_hand(ai_player.hands[-1]) if x < 22]
+
+        if not hand_sums:
+            ai_player.score_card.append(0)
+        else:
+            ai_player.score_card.append(max(hand_sums))
+
 
     def play(self) -> None:
         self.deck.shuffle()
         for i in range(self.turns):
-            print('It\'s a new deal!')
+            print('\n'+'It\'s a new deal!')
             self.deal()
 
             for player in self.players:
-                if player in self.ais:
-                    pass
-                    #self.ai_play(player)
+                if player.name in self.ais:
+                    self.ai_play(player)
                 else:
                     self.turn(player)
 
@@ -179,35 +178,37 @@ class BlackJack:
     def assess(self) -> str:
 
         for player in self.players:
-            if player.name == 'Dealer':
+            if player.name == dealer_ai:
                 dealer_score = player.score_card[-1]
-                print(f'The dealer\'s hand is {player.hands[-1]}. The dealer\'s score is {dealer_score}')
+                print('\n'+f'The dealer\'s hand is {player.hands[-1]}. The dealer\'s score is {dealer_score}')
 
-        hands = [-1]
+
         for player in self.players:
+            hands = [-1]
 
             if player.split:
                 hands = [-2, -1]
-            if player.name != 'Dealer':
+            if player.name not in self.ais:
                 for h in hands:
                     if player.score_card[h] == 0:
-                        print(f'{player.name} busted with {player.score_card[h]} and lost {self.ante}')
+                        print(f'{player.name} busted with {player.score_card[h]} and lost {player.ante[h]}')
                     elif player.score_card[h] == dealer_score:
                         player.cash += sum(player.ante)
-                        print(f'{player.name} tied dealer with {player.score_card[h]} and made back their ante of {self.ante}')
+                        print(f'{player.name} tied dealer with {player.score_card[h]} and made back their ante of {player.ante[h]}')
                     elif player.score_card[h] < dealer_score:
-                        print(f'{player.name} lost to the dealer with {player.score_card[h]} and lost {self.ante}')
+                        print(f'{player.name} lost to the dealer with {player.score_card[h]} and lost {player.ante[h]}')
                     else:
                         player.cash += sum(player.ante) * 2
-                        print(f'{player.name} won with {player.score_card[h]} and made {self.ante*2}')
+                        print(f'{player.name} won with {player.score_card[h]} and made {player.ante[h]*2}')
 
     def check_cash(self):
         for player in self.players:
-            if player.name != 'Dealer':
+            if player.name not in self.ais:
                 print(f'{player.name} currently has {player.cash}.')
 
 def main():
-    game = BlackJack(['Tim', 'Brad'], deck_num=4, turns=100)
+    print(dealer_ai in [dealer_ai])
+    game = BlackJack(['Tim', 'Brad', dealer_ai], deck_num=4, turns=100)
     game.play()
 
 if __name__ == "__main__":
