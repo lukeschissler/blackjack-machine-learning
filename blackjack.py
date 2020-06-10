@@ -1,60 +1,5 @@
-from random import shuffle
-from AIs import dealer_ai, hits_ai, dd_ai
-
-
-class Card:
-    def __init__(self, val: str, suit: str) -> None:
-        self.val = val
-        self.suit = suit
-
-    def __repr__(self) -> str:
-        return f"{self.val} of {self.suit}"
-
-    def return_val(self):
-        if self.val in ["King", "Jack", "Queen", "10"]:
-            return "10"
-        elif self.val in "Ace":
-            return (1, 11)
-        else:
-            return self.val
-
-
-class Deck:
-    def __init__(self, num=1) -> None:
-        self.num = num
-        self.deck_reset()
-
-    def deck_reset(self) -> None:
-        suits = ["Hearts", "Diamonds", "Spades", "Clubs"]
-        vals = [str(x) for x in range(2, 11)] + ["Jack", "Queen", "King", "Ace"]
-        self.deck = [Card(x, y) for x in vals for y in suits] * self.num
-
-    def shuffle(self) -> None:
-        shuffle(self.deck)
-
-    def deal(self, size) -> list:
-        """Implement more true to life deal"""
-        return [self.deck.pop() for x in range(size)]
-
-
-class Player:
-    def __init__(self, name, cash):
-        self.name = name
-        self.cash = cash
-        self.hands = []
-        self.old_hands = []
-        self.antes = []
-
-    def __repr__(self) -> str:
-        return f"{self.name}: Cash - {self.cash}, Hand - {self.hands}"
-
-    def reset(self) -> None:
-        self.antes = []
-
-    def shift_stack(self) -> None:
-        self.old_hands.append(self.hands[-1])
-        self.hands = self.hands[:-1]
-
+from AIs import dealer_ai, hits_ai, dd_ai, ml_ai
+from utils import Deck, Player
 
 class BlackJack:
     def __init__(self, players, deck_num=1, turns=1, cash=500, ante=50) -> None:
@@ -101,8 +46,11 @@ class BlackJack:
                     hand_sum=self.sum_hand(player.hands[-1]),
                     dealer_card=self.d1_card,
                     hand=player.hands[-1],
+                    split=player.split
                 )
                 print(str(player.name)+' -> '+move)
+                if len(player.hands[-1]) > 2 and move == 'd':
+                    move = 'h'
             else:
                 print(
                     f"It's {player.name}'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}"
@@ -111,6 +59,7 @@ class BlackJack:
 
             if move == "p" and len(player.hands) == 1:
                 if player.hands[-1][0].return_val() == player.hands[-1][1].return_val():
+                    player.split = 1
                     player.antes.append(self.ante)
                     player.cash -= self.ante
                     player.hands = [
@@ -157,11 +106,11 @@ class BlackJack:
             for player in self.players:
                 self.turn(player)
 
-            self.assess()
+            self.settlement()
             self.check_cash()
             self.reset()
 
-    def assess(self):
+    def settlement(self):
 
         d_hand = self.dealer_hand("old")
         dealer_sums = [x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])]
@@ -221,7 +170,7 @@ class BlackJack:
 
 
 def main():
-    game = BlackJack([dealer_ai, hits_ai, dd_ai], deck_num=4, turns=1000)
+    game = BlackJack([dealer_ai, ml_ai, hits_ai, dd_ai], deck_num=4, turns=3000)
     game.play()
 
 
