@@ -3,14 +3,15 @@ from random import random
 def random_ai():
     return round(random())
 
-def dealer_ai(hand_sum):
+def dealer_ai(**kwargs):
+    hand_sum = kwargs.get('hand_sum')
     if max(hand_sum) >= 17:
-        return 0
+        return 's'
     else:
-        return 1
+        return 'h'
 
 
-def bad_ai():
+def hits_ai():
     pass
 
 
