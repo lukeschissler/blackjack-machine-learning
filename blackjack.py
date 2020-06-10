@@ -1,5 +1,5 @@
 from random import shuffle
-from AIs import dealer_ai, hits_ai
+from AIs import dealer_ai, hits_ai, dd_ai
 
 
 class Card:
@@ -11,12 +11,13 @@ class Card:
         return f"{self.val} of {self.suit}"
 
     def return_val(self):
-        if self.val in ['King', 'Jack', 'Queen', '10']:
-            return '10'
-        elif self.val in 'Ace':
-            return (1,11)
+        if self.val in ["King", "Jack", "Queen", "10"]:
+            return "10"
+        elif self.val in "Ace":
+            return (1, 11)
         else:
             return self.val
+
 
 class Deck:
     def __init__(self, num=1) -> None:
@@ -35,6 +36,7 @@ class Deck:
         """Implement more true to life deal"""
         return [self.deck.pop() for x in range(size)]
 
+
 class Player:
     def __init__(self, name, cash):
         self.name = name
@@ -43,18 +45,19 @@ class Player:
         self.old_hands = []
         self.antes = []
 
-    def __repr__(self):
-        return f'{self.name}: Cash - {self.cash}, Hand - {self.hands}'
+    def __repr__(self) -> str:
+        return f"{self.name}: Cash - {self.cash}, Hand - {self.hands}"
 
-    def reset(self):
+    def reset(self) -> None:
         self.antes = []
 
-    def shift_stack(self):
+    def shift_stack(self) -> None:
         self.old_hands.append(self.hands[-1])
         self.hands = self.hands[:-1]
 
+
 class BlackJack:
-    def __init__(self, players, deck_num=1, turns=1, cash = 500, ante=50) -> None:
+    def __init__(self, players, deck_num=1, turns=1, cash=500, ante=50) -> None:
         self.players = [Player(x, cash) for x in players]
         self.deck_num = deck_num
         self.turns = turns
@@ -65,17 +68,17 @@ class BlackJack:
         if len(self.deck.deck) < len(self.players) + 52:
             self.deck.deck_reset()
             self.deck.shuffle()
-        else:
-            for player in self.players:
-                player.hands.append(self.deck.deal(2))
-                player.antes.append(self.ante)
 
-    def dealer_hand(self, state):
+        for player in self.players:
+            player.hands.append(self.deck.deal(2))
+            player.antes.append(self.ante)
+
+    def dealer_hand(self, state) -> list:
         for player in self.players:
             if player.name == dealer_ai:
-                if state == 'curr':
+                if state == "curr":
                     return player.hands
-                if state == 'old':
+                if state == "old":
                     return player.old_hands
 
     def sum_hand(self, hand) -> list:
@@ -88,24 +91,36 @@ class BlackJack:
                 sums = [x + int(card.return_val()) for x in sums]
         return sorted(set(sums))
 
-    def turn(self, player : Player) -> None:
+    def turn(self, player: Player) -> None:
         player.cash -= self.ante
         player.antes.append(self.ante)
 
         while player.hands:
             if callable(player.name):
-                move = player.name(hand_sum=self.sum_hand(player.hands[-1]), dealer_card = self.dealer_hand('curr')[0][0])
+                move = player.name(
+                    hand_sum=self.sum_hand(player.hands[-1]),
+                    dealer_card=self.d1_card,
+                    hand=player.hands[-1],
+                )
+                print(str(player.name)+' -> '+move)
             else:
-                print(f'It\'s {player.name}\'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}')
-                move = input('Split (P), Double-Down (D), Hit (H), Stand (S): ').lower()
+                print(
+                    f"It's {player.name}'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}"
+                )
+                move = input("Split (P), Double-Down (D), Hit (H), Stand (S): ").lower()
 
             if move == "p" and len(player.hands) == 1:
                 if player.hands[-1][0].return_val() == player.hands[-1][1].return_val():
                     player.antes.append(self.ante)
                     player.cash -= self.ante
-                    player.hands = [[player.hands[-1][0]] + self.deck.deal(1), [player.hands[-1][1]] + self.deck.deal(1)]
+                    player.hands = [
+                        [player.hands[-1][0]] + self.deck.deal(1),
+                        [player.hands[-1][1]] + self.deck.deal(1),
+                    ]
                 else:
-                    print('You cannot split because your cards do not have the same value.')
+                    print(
+                        "You cannot split because your cards do not have the same value."
+                    )
 
             elif move == "d":
                 if len(player.hands[-1]) == 2:
@@ -114,7 +129,7 @@ class BlackJack:
                     player.antes[-1] += self.ante
                     player.shift_stack()
                 else:
-                    print('You cannot double down after the first hit.')
+                    print("You cannot double down after the first hit.")
 
             elif move == "h":
                 player.hands[-1] += self.deck.deal(1)
@@ -135,8 +150,9 @@ class BlackJack:
     def play(self) -> None:
         self.deck.shuffle()
         for i in range(self.turns):
-            print('\n'+'It\'s a new deal!')
+            print("\n" + "It's a new deal!")
             self.deal()
+            self.d1_card = self.dealer_hand('curr')[0][0]
 
             for player in self.players:
                 self.turn(player)
@@ -145,18 +161,21 @@ class BlackJack:
             self.check_cash()
             self.reset()
 
+    def assess(self):
 
-    def assess(self) -> str:
-
-        d_hand = self.dealer_hand('old')
-        dealer_sums = self.sum_hand(d_hand[-1])
-        if all(j > 21 for j in dealer_sums):
+        d_hand = self.dealer_hand("old")
+        dealer_sums = [x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])]
+        if not dealer_sums:
             dealer_score = 0
         else:
             dealer_score = max(dealer_sums)
 
-        print('\n'+'The dealer\'s hand is {}. The dealer\'s score is {}'.format(d_hand[0], dealer_score))
-
+        print(
+            "\n"
+            + "The dealer's hand is {}. The dealer's score is {}".format(
+                d_hand[0], dealer_score
+            )
+        )
 
         for player in self.players:
             if player.name == dealer_ai:
@@ -171,30 +190,40 @@ class BlackJack:
                         score = max(hand_sum)
 
                     if score == 0:
-                        print(f'{player.name} busted with {score} and lost {player.antes[-1]}')
+                        print(
+                            f"{player.name} busted with {score} and lost {player.antes[-1]}"
+                        )
                     elif score == dealer_score:
                         player.cash += player.antes[-1]
-                        print(f'{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}')
+                        print(
+                            f"{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}"
+                        )
                     elif score < dealer_score:
-                        print(f'{player.name} lost to the dealer with {score} and lost {player.antes[-1]}')
+                        print(
+                            f"{player.name} lost to the dealer with {score} and lost {player.antes[-1]}"
+                        )
                     else:
                         player.cash += player.antes[-1] * 2
-                        print(f'{player.name} won with {score} and made {player.antes[-1]*2}')
+                        print(
+                            f"{player.name} won with {score} and made {player.antes[-1]*2}"
+                        )
                     player.antes = player.antes[:-1]
                     player.old_hands = player.old_hands[:-1]
 
     def check_cash(self):
         for player in self.players:
-            if not callable(player.name):
-                print(f'{player.name} currently has {player.cash}.')
+            if player.name != dealer_ai:
+                print(f"{player.name} currently has {player.cash}.")
 
     def reset(self):
         for player in self.players:
             player.reset()
 
+
 def main():
-    game = BlackJack(['Tim', 'Brad', dealer_ai], deck_num=4, turns=3)
+    game = BlackJack([dealer_ai, hits_ai, dd_ai], deck_num=4, turns=1000)
     game.play()
+
 
 if __name__ == "__main__":
     main()
