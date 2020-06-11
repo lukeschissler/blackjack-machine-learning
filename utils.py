@@ -111,7 +111,7 @@ class AiPlayer(Player):
         self.fitness_table = []
 
     def __repr__(self):
-        return super().__repr__() + f', Func. - {self.func}'
+        return super().__repr__() + f', Func. - {self.func.__name__}'
 
     def update_fitness(self, cash):
         self.fitness_table.append(self.cash)
@@ -137,9 +137,23 @@ class GameMaster:
 
     def __init__(self):
         self.models = []
+        self.used_names = []
 
-    def add_models(self, num):
-        
+    def add_models(self, num, cash, func):
+        model_num = randint(0,100000)
+        for i in range(num):
+            while model_num in self.used_names:
+                model_num = randint(0,100000)
+            self.used_names.append(model_num)
+            player = AiPlayer('Model #'+str(model_num), cash, func)
+            player.gen_random_tables()
+            self.models.append(player)
+
+    def sort_by_fitness(self, cash):
+        for model in self.models:
+            model.update_fitness(cash)
+        self.models = sorted(self.models, key = lambda x: x.fitness_table[-1])
+
 
 
 if __name__ == '__main__':

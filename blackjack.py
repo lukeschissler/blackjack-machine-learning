@@ -1,5 +1,5 @@
 from AIs import dealer_ai, hits_ai, dd_ai, ml_ai
-from utils import Deck, Player, AiPlayer, optimal_hard_hands, optimal_soft_hands, optimal_split_hands
+from utils import Deck, Player, AiPlayer, optimal_hard_hands, optimal_soft_hands, optimal_split_hands, GameMaster
 from time import sleep
 
 class BlackJack:
@@ -174,14 +174,18 @@ class BlackJack:
 
 
 def main():
+    game_master = GameMaster()
+    game_master.add_models(5, 500, ml_ai)
     my_ml = AiPlayer('Random AI', 500, ml_ai)
     my_perf_ml = AiPlayer('Optimal AI', 500, ml_ai)
     my_ml.gen_random_tables()
     my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
-    players = [AiPlayer('Dealer', 500, dealer_ai), my_ml, my_perf_ml]
+    players = [AiPlayer('Dealer', 500, dealer_ai)] + game_master.models
     game = BlackJack(players, deck_num=4, turns=1000)
     game.play()
     game.check_cash()
+    game_master.sort_by_fitness(500)
+    print(game_master.models)
 
 
 if __name__ == "__main__":
