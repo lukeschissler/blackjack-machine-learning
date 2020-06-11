@@ -3,14 +3,15 @@ from utils import Deck, Player, AiPlayer, optimal_hard_hands, optimal_soft_hands
 from time import sleep
 
 class BlackJack:
-    def __init__(self, players, deck_num=1, turns=1, ante=50) -> None:
+    def __init__(self, players, deck_num=1, turns=1, ante=50, outs=False) -> None:
         self.players = players
         self.turns = turns
         self.deck = Deck(deck_num)
         self.ante = ante
+        self.outs = outs
 
     def deal(self) -> None:
-        if len(self.deck.deck) < len(self.players) + 52:
+        if len(self.deck.deck) < len(self.players)*2 + 52:
             self.deck.deck_reset()
             self.deck.shuffle()
 
@@ -44,9 +45,11 @@ class BlackJack:
                 move = player.func(
                     hand_sum=self.sum_hand(player.hands[-1]),
                     dealer_card=self.d1_card,
-                    player=player
+                    player=player,
+                    outs=self.outs
                 )
-                print(str(player.name)+' -> '+move)
+                if self.outs:
+                    print(str(player.name)+' -> '+move)
                 if len(player.hands[-1]) > 2 and move == 'd':
                     move = 'h'
             else:
@@ -100,7 +103,8 @@ class BlackJack:
     def play(self) -> None:
         self.deck.shuffle()
         for i in range(self.turns):
-            print("\n" + "It's a new deal!")
+            if self.outs:
+                print("\n" + "It's a new deal!")
             self.deal()
             self.d1_card = self.dealer_hand('curr')[0][0]
 
@@ -118,13 +122,13 @@ class BlackJack:
             dealer_score = 0
         else:
             dealer_score = max(dealer_sums)
-
-        print(
-            "\n"
-            + "The dealer's hand is {}. The dealer's score is {}".format(
-                d_hand[0], dealer_score
+        if self.outs:
+            print(
+                "\n"
+                + "The dealer's hand is {}. The dealer's score is {}".format(
+                    d_hand[0], dealer_score
+                )
             )
-        )
 
         for player in self.players:
             if player.name == dealer_ai:
@@ -139,27 +143,32 @@ class BlackJack:
                         score = max([x for x in hand_sum if x < 22])
 
                     if score == 0:
-                        print(
-                            f"{player.name} busted with {score} and lost {player.antes[-1]}"
-                        )
+                        if self.outs:
+                            print(
+                                f"{player.name} busted with {score} and lost {player.antes[-1]}"
+                            )
                     elif score == dealer_score:
                         player.cash += player.antes[-1]
-                        print(
-                            f"{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}"
-                        )
+                        if self.outs:
+                            print(
+                                f"{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}"
+                            )
                     elif score < dealer_score:
-                        print(
-                            f"{player.name} lost to the dealer with {score} and lost {player.antes[-1]}"
-                        )
+                        if self.outs:
+                            print(
+                                f"{player.name} lost to the dealer with {score} and lost {player.antes[-1]}"
+                            )
                     else:
                         if score == 21:
                             player.cash += player.antes[-1] * (3/2)
-                            print(f"{player.name} won with blackjack and made {player.antes[-1] * (3/2)}")
+                            if self.outs:
+                                print(f"{player.name} won with blackjack and made {player.antes[-1] * (3/2)}")
                         else:
                             player.cash += player.antes[-1] * 2
-                            print(
-                                f"{player.name} won with {score} and made {player.antes[-1]*2}"
-                            )
+                            if self.outs:
+                                print(
+                                    f"{player.name} won with {score} and made {player.antes[-1]*2}"
+                                )
                     player.antes = player.antes[:-1]
                     player.old_hands = player.old_hands[:-1]
 
@@ -174,18 +183,27 @@ class BlackJack:
 
 
 def main():
-    game_master = GameMaster()
-    game_master.add_models(5, 500, ml_ai)
-    my_ml = AiPlayer('Random AI', 500, ml_ai)
+    game_master = GameMaster(ml_ai, 500)
+    game_master.add_models(40)
     my_perf_ml = AiPlayer('Optimal AI', 500, ml_ai)
-    my_ml.gen_random_tables()
     my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
-    players = [AiPlayer('Dealer', 500, dealer_ai)] + game_master.models
-    game = BlackJack(players, deck_num=4, turns=1000)
-    game.play()
-    game.check_cash()
-    game_master.sort_by_fitness(500)
-    print(game_master.models)
+
+    players = [AiPlayer('Dealer', 500, dealer_ai), my_perf_ml] + game_master.models
+
+    for i in range(500):
+        my_perf_ml = AiPlayer('Optimal AI', 500, ml_ai)
+        my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
+        players = [AiPlayer('Dealer', 500, dealer_ai), my_perf_ml] + game_master.models
+        game = BlackJack(players, deck_num=100, turns=1000, ante=50, outs=0)
+
+        game.play()
+        game_master.sort_by_fitness()
+        game_master.tournament_selection()
+
+    print(game_master.models[0].hard_table)
+    print(f'optimal: {my_perf_ml.cash}')
+    game_master.first_and_last()
+
 
 
 if __name__ == "__main__":

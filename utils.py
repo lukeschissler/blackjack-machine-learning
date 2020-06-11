@@ -1,4 +1,4 @@
-from random import shuffle, randint
+from random import shuffle, randint, random
 
 dealer_dict = {'2':0, '3':1, '4':2, '5':3, '6':4, '7':5, '8':6, '9':7, '10':8, 'Jack':8, 'Queen':8, 'King': 8,
             'Ace': 9}
@@ -111,11 +111,11 @@ class AiPlayer(Player):
         self.fitness_table = []
 
     def __repr__(self):
-        return super().__repr__() + f', Func. - {self.func.__name__}'
+        return f'{self.name}, Fitness: {self.fitness_table}, Cash: {self.cash}'
 
-    def update_fitness(self, cash):
+    def update_fitness(self, c):
         self.fitness_table.append(self.cash)
-        self.cash = cash
+        self.cash = c
 
     def set_tables(self, hard_table, soft_table, split_table):
         self.hard_table = hard_table
@@ -135,28 +135,89 @@ class AiPlayer(Player):
 
 class GameMaster:
 
-    def __init__(self):
+    def __init__(self, func, cash):
         self.models = []
         self.used_names = []
+        self.cash = cash
+        self.func = func
 
-    def add_models(self, num, cash, func):
+    def add_models(self, num):
         model_num = randint(0,100000)
         for i in range(num):
             while model_num in self.used_names:
                 model_num = randint(0,100000)
             self.used_names.append(model_num)
-            player = AiPlayer('Model #'+str(model_num), cash, func)
+            player = AiPlayer('Model #'+str(model_num), self.cash, self.func)
             player.gen_random_tables()
             self.models.append(player)
 
-    def sort_by_fitness(self, cash):
+    def sort_by_fitness(self):
         for model in self.models:
-            model.update_fitness(cash)
-        self.models = sorted(self.models, key = lambda x: x.fitness_table[-1])
+            model.update_fitness(self.cash)
+
+    def crossover(self, p1, p2):
+        p1_fitness = p1.fitness_table[-1]
+        p2_fitness = p2.fitness_table[-1]
+        p1_ratio = 1 - abs(p1_fitness)/(abs(p1_fitness)+abs(p2_fitness))
+        child_hhs = [[] for x in range(17)]
+        child_shs = [[] for x in range(9)]
+        child_phs = [[] for x in range(10)]
+
+        for x in range(17):
+            for p1s, p2s in zip(p1.hard_table[x], p2.hard_table[x]):
+                if random() < p1_ratio:
+                    child_hhs[x].append(p1s)
+                else:
+                    child_hhs[x].append(p2s)
+
+        for x in range(9):
+            for p1s, p2s in zip(p1.soft_table[x], p2.soft_table[x]):
+                if random() < p1_ratio:
+                    child_shs[x].append(p1s)
+                else:
+                    child_shs[x].append(p2s)
+
+        for x in range(10):
+            for p1s, p2s in zip(p1.split_table[x], p2.split_table[x]):
+                if random() < p1_ratio:
+                    child_phs[x].append(p1s)
+                else:
+                    child_phs[x].append(p2s)
+
+        child = AiPlayer(str(randint(0,1000000)), self.cash, self.func)
+        child.set_tables(child_hhs, child_shs, child_phs)
+        if p1_fitness > p2_fitness:
+            child.fitness_table += p1.fitness_table
+        else:
+            child.fitness_table += p2.fitness_table
+            #child.name = p2.name
+
+        return child
+
+    def select_parent(self):
+        p1 = randint(0, len(self.models)-1)
+        p2 = randint(0, len(self.models)-1)
+        if self.models[p1].fitness_table[-1] > self.models[p2].fitness_table[-1]:
+            return p1
+        else:
+            return p2
+
+    def tournament_selection(self):
+        children = []
+        while len(children) < len(self.models):
+            parent_1 = self.models[self.select_parent()]
+            parent_2 = self.models[self.select_parent()]
+            child = self.crossover(parent_1, parent_2)
+            children.append(child)
+
+
+        self.models = children
+
+    def first_and_last(self):
+        for model in self.models:
+            print(f'First: {model.fitness_table[0]} Last: {model.fitness_table[-1]}')
 
 
 
 if __name__ == '__main__':
-    my_player = AiPlayer('henry', 500)
-    my_player.gen_random_tables()
-    print(my_player.hard_table)
+    pass

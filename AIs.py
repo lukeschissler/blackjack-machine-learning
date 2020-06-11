@@ -41,9 +41,11 @@ def ml_ai(**kwargs):
     hand_sum = kwargs.get('hand_sum')
     dealer_card = kwargs.get('dealer_card')
     player = kwargs.get('player')
+    outs = kwargs.get('outs')
 
     hand_type = hand_typer(player.hands[-1], hand_sum, player.split)
-    print(f'Hand: {player.hands[-1]},  hand_type: {hand_type}, D_card: {dealer_card.val}, Ante: {player.antes}')
+    if outs:
+        print(f'Hand: {player.hands[-1]},  hand_type: {hand_type}, D_card: {dealer_card.val}, Ante: {player.antes}')
 
     if hand_type == 'hard':
         return player.hard_table[hh_dict[min(hand_sum)]][dealer_dict[dealer_card.val]].lower()
