@@ -1,0 +1,9 @@
+* Make deals more true to life
+* Alter new/old hands system (score-card based system instead)
+* Pretty printing for generated tables
+* Data vis for the ML models
+* Figure out why optimal solution loses more money than expected
+* Add a notebook visualization
+* Better fitness tracking between generations
+* README file
+* Ratio selection for crossover and randomly generated children not working
