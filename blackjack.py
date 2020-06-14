@@ -1,9 +1,28 @@
 from AIs import dealer_ai, hits_ai, dd_ai, ml_ai
-from utils import Deck, Player, AiPlayer, optimal_hard_hands, optimal_soft_hands, optimal_split_hands, GameMaster
+from utils import (
+    Deck,
+    Player,
+    AiPlayer,
+    optimal_hard_hands,
+    optimal_soft_hands,
+    optimal_split_hands,
+    GameMaster,
+)
 from time import sleep
 
+
 class BlackJack:
+    """Blackjack game object. Handles deck creation, dealing, playing, and turn assessment."""
+
     def __init__(self, players, deck_num=1, turns=1, ante=50, outs=False) -> None:
+        """
+
+        :param players: Instances of Player class
+        :param deck_num: Number of decks to play with. Default: 1
+        :param turns: How many turns to play. Default: 1
+        :param ante: Set the ante for the game. Default:  1
+        :param outs: Set whether to print notification outstrings. Default:  Don't print.
+        """
         self.players = players
         self.turns = turns
         self.deck = Deck(deck_num)
@@ -11,7 +30,8 @@ class BlackJack:
         self.outs = outs
 
     def deal(self) -> None:
-        if len(self.deck.deck) < len(self.players)*2 + 52:
+        """Deal cards to players.  Increase deck size if too small to deal."""
+        if len(self.deck.deck) < len(self.players) * 4 + 52:
             self.deck.deck_reset()
             self.deck.shuffle()
 
@@ -19,6 +39,7 @@ class BlackJack:
             player.hands.append(self.deck.deal(2))
 
     def dealer_hand(self, state) -> list:
+        """Access the dealers current or played hand."""
         for player in self.players:
             if player.func == dealer_ai:
                 if state == "curr":
@@ -27,6 +48,7 @@ class BlackJack:
                     return player.old_hands
 
     def sum_hand(self, hand) -> list:
+        """Return the sum(s) of a player's hand."""
         sums = [0]
 
         for card in hand:
@@ -37,6 +59,7 @@ class BlackJack:
         return sorted(set(sums))
 
     def turn(self, player: Player) -> None:
+        """Play a turn of blackjack.  Breaks when there are no moves to make or the player stands on all hands."""
         player.cash -= self.ante
         player.antes.append(self.ante)
 
@@ -46,12 +69,12 @@ class BlackJack:
                     hand_sum=self.sum_hand(player.hands[-1]),
                     dealer_card=self.d1_card,
                     player=player,
-                    outs=self.outs
+                    outs=self.outs,
                 )
                 if self.outs:
-                    print(str(player.name)+' -> '+move)
-                if len(player.hands[-1]) > 2 and move == 'd':
-                    move = 'h'
+                    print(str(player.name) + " -> " + move)
+                if len(player.hands[-1]) > 2 and move == "d":
+                    move = "h"
             else:
                 print(
                     f"It's {player.name}'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}"
@@ -67,7 +90,7 @@ class BlackJack:
                         [player.hands[-1][0]] + self.deck.deal(1),
                         [player.hands[-1][1]] + self.deck.deal(1),
                     ]
-                    if player.hands[-1][0].val == 'Ace':
+                    if player.hands[-1][0].val == "Ace":
                         player.shift_stack()
                 else:
                     print(
@@ -101,12 +124,13 @@ class BlackJack:
                     pass
 
     def play(self) -> None:
+        """Take turns for all players, settle up, and reset for the next turn."""
         self.deck.shuffle()
         for i in range(self.turns):
             if self.outs:
                 print("\n" + "It's a new deal!")
             self.deal()
-            self.d1_card = self.dealer_hand('curr')[0][0]
+            self.d1_card = self.dealer_hand("curr")[0][0]
 
             for player in self.players:
                 self.turn(player)
@@ -115,7 +139,7 @@ class BlackJack:
             self.reset()
 
     def settlement(self):
-
+        """Assess and distribute winnings from a hand."""
         d_hand = self.dealer_hand("old")
         dealer_sums = [x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])]
         if not dealer_sums:
@@ -160,9 +184,11 @@ class BlackJack:
                             )
                     else:
                         if score == 21:
-                            player.cash += player.antes[-1] * (3/2)
+                            player.cash += player.antes[-1] * (3 / 2)
                             if self.outs:
-                                print(f"{player.name} won with blackjack and made {player.antes[-1] * (3/2)}")
+                                print(
+                                    f"{player.name} won with blackjack and made {player.antes[-1] * (3/2)}"
+                                )
                         else:
                             player.cash += player.antes[-1] * 2
                             if self.outs:
@@ -173,11 +199,13 @@ class BlackJack:
                     player.old_hands = player.old_hands[:-1]
 
     def check_cash(self):
+        """Print each player's current cash."""
         for player in self.players:
             if player.func != dealer_ai:
                 print(f"{player.name} currently has {player.cash}.")
 
     def reset(self):
+        """Reset each player in the game for the next turn."""
         for player in self.players:
             player.reset()
 
@@ -185,25 +213,26 @@ class BlackJack:
 def main():
     game_master = GameMaster(ml_ai, 500)
     game_master.add_models(40)
-    my_perf_ml = AiPlayer('Optimal AI', 500, ml_ai)
+    my_perf_ml = AiPlayer("Optimal AI", 500, ml_ai)
     my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
 
-    players = [AiPlayer('Dealer', 500, dealer_ai), my_perf_ml] + game_master.models
+    players = [AiPlayer("Dealer", 500, dealer_ai), my_perf_ml] + game_master.models
 
-    for i in range(500):
-        my_perf_ml = AiPlayer('Optimal AI', 500, ml_ai)
-        my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
-        players = [AiPlayer('Dealer', 500, dealer_ai), my_perf_ml] + game_master.models
-        game = BlackJack(players, deck_num=100, turns=1000, ante=50, outs=0)
+    for i in range(100):
+        my_perf_ml = AiPlayer("Optimal AI", 500, ml_ai)
+        my_perf_ml.set_tables(
+            optimal_hard_hands, optimal_soft_hands, optimal_split_hands
+        )
+        players = [AiPlayer("Dealer", 500, dealer_ai), my_perf_ml] + game_master.models
+        game = BlackJack(players, deck_num=500, turns=1000, ante=50, outs=0)
 
         game.play()
-        game_master.sort_by_fitness()
-        game_master.tournament_selection()
+        game_master.update_fitness()
+        game_master.tournament_selection(1)
 
     print(game_master.models[0].hard_table)
-    print(f'optimal: {my_perf_ml.cash}')
+    print(f"optimal: {my_perf_ml.cash}")
     game_master.first_and_last()
-
 
 
 if __name__ == "__main__":
