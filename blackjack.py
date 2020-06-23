@@ -9,7 +9,7 @@ from utils import (
     GameMaster,
 )
 from time import sleep
-
+import pprint
 
 class BlackJack:
     """Blackjack game object. Handles deck creation, dealing, playing, and turn assessment."""
@@ -34,6 +34,7 @@ class BlackJack:
         if len(self.deck.deck) < len(self.players) * 4 + 52:
             self.deck.deck_reset()
             self.deck.shuffle()
+
 
         for player in self.players:
             player.hands.append(self.deck.deal(2))
@@ -211,29 +212,16 @@ class BlackJack:
 
 
 def main():
-    game_master = GameMaster(ml_ai, 500)
-    game_master.add_models(40)
+    pp = pprint.PrettyPrinter()
     my_perf_ml = AiPlayer("Optimal AI", 500, ml_ai)
-    my_perf_ml.set_tables(optimal_hard_hands, optimal_soft_hands, optimal_split_hands)
-
-    players = [AiPlayer("Dealer", 500, dealer_ai), my_perf_ml] + game_master.models
-
-    for i in range(100):
-        my_perf_ml = AiPlayer("Optimal AI", 500, ml_ai)
-        my_perf_ml.set_tables(
-            optimal_hard_hands, optimal_soft_hands, optimal_split_hands
-        )
-        players = [AiPlayer("Dealer", 500, dealer_ai), my_perf_ml] + game_master.models
-        game = BlackJack(players, deck_num=500, turns=1000, ante=50, outs=0)
-
-        game.play()
-        game_master.update_fitness()
-        game_master.tournament_selection(1)
-
-    print(game_master.models[0].hard_table)
-    print(f"optimal: {my_perf_ml.cash}")
+    my_perf_ml.set_tables(
+        optimal_hard_hands, optimal_soft_hands, optimal_split_hands
+    )
+    game_master = GameMaster(ml_ai, 500)
+    game_master.add_models(40   )
+    game_master.run_sim(BlackJack, turns = 100, iter = 1000, deck_num=6,  players=[AiPlayer("Dealer", 500, dealer_ai), my_perf_ml])
+    pp.pprint(game_master.models[0].hard_table)
     game_master.first_and_last()
-
 
 if __name__ == "__main__":
     main()

@@ -7,3 +7,4 @@
 * Better fitness tracking between generations
 * README file
 * Ratio selection for crossover and randomly generated children not working
+* make it so double downing on AI is smoother

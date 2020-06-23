@@ -145,7 +145,7 @@ class Player:
         self.split = 0
 
     def shift_stack(self) -> None:
-        """Move a card off the current stack to the out_stack."""
+        """Move a hand off the current stack to the out_stack."""
         self.old_hands.append(self.hands[-1])
         self.hands = self.hands[:-1]
 
@@ -218,7 +218,7 @@ class GameMaster:
         """Crossover two parent models to generate a child model. Genetic content from each parent based on fitness ratio between parents."""
         p1_fitness = p1.fitness_table[-1]
         p2_fitness = p2.fitness_table[-1]
-        p1_ratio = 1 - abs(p1_fitness) / (abs(p1_fitness) + abs(p2_fitness))
+        p1_ratio = 1 - abs(p1_fitness) / (abs(p1_fitness) + abs(p2_fitness)+1)
         child_hhs = [[] for x in range(17)]
         child_shs = [[] for x in range(9)]
         child_phs = [[] for x in range(10)]
@@ -282,7 +282,20 @@ class GameMaster:
     def first_and_last(self):
         """Return the first and last fitness measurement for each model in the object."""
         for model in self.models:
-            print(f"First: {model.fitness_table[0]} Last: {model.fitness_table[-1]}")
+            print(f"Model: {model.name}, First: {model.fitness_table[0]} Last: {model.fitness_table[-1]}")
+
+    def run_sim(self, game, turns, iter, deck_num, players = []):
+
+
+        for i in range(iter):
+            for model in self.models:
+                simulation = game(players + [model], deck_num, turns=turns, ante=50)
+
+                simulation.play()
+
+            self.update_fitness()
+            self.tournament_selection(1)
+
 
 
 if __name__ == "__main__":
