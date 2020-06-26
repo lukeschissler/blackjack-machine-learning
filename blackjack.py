@@ -212,16 +212,10 @@ class BlackJack:
 
 
 def main():
-    pp = pprint.PrettyPrinter()
-    my_perf_ml = AiPlayer("Optimal AI", 500, ml_ai)
-    my_perf_ml.set_tables(
-        optimal_hard_hands, optimal_soft_hands, optimal_split_hands
-    )
-    game_master = GameMaster(ml_ai, 500)
-    game_master.add_models(40   )
-    game_master.run_sim(BlackJack, turns = 100, iter = 1000, deck_num=6,  players=[AiPlayer("Dealer", 500, dealer_ai), my_perf_ml])
-    pp.pprint(game_master.models[0].hard_table)
-    game_master.first_and_last()
+    my_deck = Deck(1)
+    hand1 = my_deck.deal(2)
+    hand1 += (my_deck.deal(2))
+    print(hand1)
 
 if __name__ == "__main__":
     main()
