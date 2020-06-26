@@ -5,4 +5,4 @@ install:
   - pip install pipenv
   - pipenv install --dev
 script:
-  - pytest -m pytest
+  - python -m pytest
