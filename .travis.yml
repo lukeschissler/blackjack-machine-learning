@@ -14,4 +14,4 @@ before_script:
 script:
   - coverage run -m pytest
 after_script:
-  -bash <(curl -s https://codecov.io/bash) -t 6bdc993f-40b3-47ce-9fb9-f2e67923485e
+  - bash <(curl -s https://codecov.io/bash)
