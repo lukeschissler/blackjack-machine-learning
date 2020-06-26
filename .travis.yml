@@ -1,7 +1,6 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=01b797bac7049719d015962e8c86903183b0165b122b2cbae50077e25aecca64
-
+    - piCODECOV_TOKEN="6bdc993f-40b3-47ce-9fb9-f2e67923485e"
 language: python
 python:
   - '3.6'
@@ -13,6 +12,6 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script:
-  - pytest --cov-report xml --cov-report term
+  - pytest
 after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  codecov
