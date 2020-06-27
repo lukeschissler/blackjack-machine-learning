@@ -1,7 +1,8 @@
-from blackjack_ML.AIs import dealer_ai
-from blackjack_ML.utils import (
+from AIs import dealer_ai, ml_ai
+from utils import (
     Deck,
     Player,
+    AiPlayer
 )
 
 
@@ -35,6 +36,12 @@ class BlackJack:
 
         for player in self.players:
             player.hands.append(self.deck.deal(2))
+
+    def check_hand(self, player) -> None:
+        if player.hands:
+            hand_sum = self.sum_hand(player.hands[-1])
+            if 21 in hand_sum or all(j > 21 for j in hand_sum):
+                player.shift_stack()
 
     def dealer_hand(self, state) -> list:
         """Access the dealers current or played hand."""
@@ -93,11 +100,7 @@ class BlackJack:
             else:
                 player.shift_stack()
 
-
-            if player.hands:
-                hand_sum = self.sum_hand(player.hands[-1])
-                if 21 in hand_sum or all(j > 21 for j in hand_sum):
-                    player.shift_stack()
+            self.check_hand()
 
     def play(self) -> None:
         """Take turns for all players, settle up, and reset for the next turn."""
@@ -144,8 +147,6 @@ class BlackJack:
         for player in self.players:
             if player.func != dealer_ai:
                 self.compare_hands(dealer_score, player)
-        #sleep(3)
-
 
     def check_cash(self):
         """Print each player's current cash."""
@@ -160,8 +161,6 @@ class BlackJack:
 
 
 def main():
-    game = BlackJack(['tim', dealer_ai], 4, 10, 50, True)
-    game.play()
-
+    my_deck = Deck()
 if __name__ == "__main__":
     main()

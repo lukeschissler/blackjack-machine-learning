@@ -1,5 +1,5 @@
 from random import random
-from blackjack_ML.utils import hh_dict, sh_dict, sp_dict, dealer_dict
+from statics import hh_dict, sh_dict, sp_dict, dealer_dict
 
 
 def hand_typer(hand, hand_sums, split):
