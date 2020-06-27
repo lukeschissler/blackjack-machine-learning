@@ -26,7 +26,7 @@ class BlackJack:
         self.turns = turns
         self.deck = Deck(deck_num)
         self.ante = ante
-        self.outs = outsf
+        self.outs = outs
 
     def optional_print(self, msg):
         if self.outs:
@@ -75,8 +75,7 @@ class BlackJack:
                     player=player,
                     outs=self.outs,
                 )
-                if self.outs:
-                    print(str(player.name) + " -> " + move)
+                self.optional_print(str(player.name) + " -> " + move)
                 if len(player.hands[-1]) > 2 and move == "d":
                     move = "h"
             else:
@@ -123,8 +122,6 @@ class BlackJack:
                 hand_sum = self.sum_hand(player.hands[-1])
                 if 21 in hand_sum or all(j > 21 for j in hand_sum):
                     player.shift_stack()
-                else:
-                    pass
 
     def play(self) -> None:
         """Take turns for all players, settle up, and reset for the next turn."""
@@ -168,14 +165,8 @@ class BlackJack:
     def settlement(self):
         """Assess and distribute winnings from a hand."""
         d_hand = self.dealer_hand("old")
-        dealer_sums = [x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])]
-        if not dealer_sums:
-            dealer_score = 0
-        else:
-            dealer_score = max(dealer_sums)
-            self.optional_print("\n"
-            + "The dealer's hand is {}. The dealer's score is {}".format(
-                d_hand[0], dealer_score))
+        dealer_score = max([x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])])
+        self.optional_print("\n" + "The dealer's hand is {}. The dealer's score is {}".format(d_hand[0], dealer_score))
 
         for player in self.players:
             if player.name == dealer_ai:
@@ -197,10 +188,8 @@ class BlackJack:
 
 
 def main():
-    my_deck = Deck(1)
-    hand1 = my_deck.deal(2)
-    hand1 += (my_deck.deal(2))
-    print(hand1)
+    game = BlackJack(['tim', dealer_ai], 4, 10, 50, True)
+    game.play()
 
 if __name__ == "__main__":
     main()

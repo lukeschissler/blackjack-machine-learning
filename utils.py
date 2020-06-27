@@ -149,6 +149,18 @@ class Player:
         self.old_hands.append(self.hands[-1])
         self.hands = self.hands[:-1]
 
+    def split_turn(self, ante) -> None:
+        self.split = 1
+        self.antes.append(ante)
+        self.cash -= ante
+
+    def double_down_turn(self, ante) -> None:
+        self.cash -= ante
+        self.antes[-1] += ante
+        self.shift_stack()
+
+    def stand_turn(self) -> None:
+        self.shift_stack()
 
 
 class AiPlayer(Player):
