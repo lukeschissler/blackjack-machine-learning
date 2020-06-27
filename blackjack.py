@@ -1,4 +1,4 @@
-from AIs import dealer_ai, hits_ai, dd_ai, ml_ai
+from AIs import dealer_ai, ml_ai
 from utils import (
     Deck,
     Player,
@@ -9,7 +9,6 @@ from utils import (
     GameMaster,
 )
 from time import sleep
-import pprint
 
 class BlackJack:
     """Blackjack game object. Handles deck creation, dealing, playing, and turn assessment."""
@@ -159,7 +158,7 @@ class BlackJack:
             if player.name == dealer_ai:
                 player.old_hands = player.old_hands[:-1]
 
-            if player.func != dealer_ai:
+            else:
                 while player.old_hands:
                     hand_sum = self.sum_hand(player.old_hands[-1])
                     if all(j > 21 for j in hand_sum):
