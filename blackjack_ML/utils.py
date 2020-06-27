@@ -130,7 +130,7 @@ class Player:
         self.name = name
         self.cash = cash
         self.hands = []
-        self.old_hands = []
+        self.played_hands = []
         self.antes = []
         self.split = 0
         self.func = None
@@ -141,12 +141,13 @@ class Player:
 
     def reset(self) -> None:
         """Reset a player for a new hand."""
+        self.played_hands = []
         self.antes = []
         self.split = 0
 
     def shift_stack(self) -> None:
         """Move a hand off the current stack to the out_stack."""
-        self.old_hands.append(self.hands[-1])
+        self.played_hands.append(self.hands[-1])
         self.hands = self.hands[:-1]
 
     def split_turn(self, ante) -> None:
