@@ -1,8 +1,5 @@
 import unittest
-import sys
 import random
-
-#sys.path.append("/Users/lukeschissler/Documents/Github/blackjack_ML")
 
 from blackjack_ML.utils import Card, Deck
 
