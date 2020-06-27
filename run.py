@@ -35,3 +35,5 @@ def optimal_tracking():
             if player.name == "Optimal AI":
                 results.append(player.cash)
     print(sum(results)/len(results))
+
+basic_sim()

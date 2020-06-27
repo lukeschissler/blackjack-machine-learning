@@ -26,7 +26,11 @@ class BlackJack:
         self.turns = turns
         self.deck = Deck(deck_num)
         self.ante = ante
-        self.outs = outs
+        self.outs = outsf
+
+    def optional_print(self, msg):
+        if self.outs:
+            print(msg)
 
     def deal(self) -> None:
         """Deal cards to players.  Increase deck size if too small to deal."""
@@ -76,9 +80,8 @@ class BlackJack:
                 if len(player.hands[-1]) > 2 and move == "d":
                     move = "h"
             else:
-                print(
-                    f"It's {player.name}'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}"
-                )
+                self.optional_print("It's {player.name}'s turn. Hand: {player.hands[-1]}. Sum(s): {self.sum_hand(player.hands[-1])}")
+
                 move = input("Split (P), Double-Down (D), Hit (H), Stand (S): ").lower()
 
             if move == "p" and len(player.hands) == 1:
@@ -127,8 +130,7 @@ class BlackJack:
         """Take turns for all players, settle up, and reset for the next turn."""
         self.deck.shuffle()
         for i in range(self.turns):
-            if self.outs:
-                print("\n" + "It's a new deal!")
+            self.optional_print("\n" + "It's a new deal!")
             self.deal()
             self.d1_card = self.dealer_hand("curr")[0][0]
 
@@ -138,6 +140,31 @@ class BlackJack:
             self.settlement()
             self.reset()
 
+    def compare_hands(self, dealer_score, player):
+        while player.old_hands:
+            hand_sum = self.sum_hand(player.old_hands[-1])
+            try:
+                score = max([x for x in hand_sum if x < 22])
+            except:
+                score = []
+
+            if not score:
+                self.optional_print("{player.name} busted with {score} and lost {player.antes[-1]}")
+            elif score == dealer_score:
+                player.cash += player.antes[-1]
+                self.optional_print("{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}")
+            elif score < dealer_score:
+                self.optional_print("{player.name} lost to the dealer with {score} and lost {player.antes[-1]}")
+            else:
+                if score == 21:
+                    player.cash += player.antes[-1] * (3 / 2)
+                    self.optional_print("{player.name} won with blackjack and made {player.antes[-1] * (3 / 2)}")
+                else:
+                    player.cash += player.antes[-1] * 2
+                    self.optional_print("{player.name} won with {score} and made {player.antes[-1] * 2}")
+            player.antes = player.antes[:-1]
+            player.old_hands = player.old_hands[:-1]
+
     def settlement(self):
         """Assess and distribute winnings from a hand."""
         d_hand = self.dealer_hand("old")
@@ -146,57 +173,16 @@ class BlackJack:
             dealer_score = 0
         else:
             dealer_score = max(dealer_sums)
-        if self.outs:
-            print(
-                "\n"
-                + "The dealer's hand is {}. The dealer's score is {}".format(
-                    d_hand[0], dealer_score
-                )
-            )
+            self.optional_print("\n"
+            + "The dealer's hand is {}. The dealer's score is {}".format(
+                d_hand[0], dealer_score))
 
         for player in self.players:
             if player.name == dealer_ai:
                 player.old_hands = player.old_hands[:-1]
 
             else:
-                while player.old_hands:
-                    hand_sum = self.sum_hand(player.old_hands[-1])
-                    if all(j > 21 for j in hand_sum):
-                        score = 0
-                    else:
-                        score = max([x for x in hand_sum if x < 22])
-
-                    if score == 0:
-                        if self.outs:
-                            print(
-                                f"{player.name} busted with {score} and lost {player.antes[-1]}"
-                            )
-                    elif score == dealer_score:
-                        player.cash += player.antes[-1]
-                        if self.outs:
-                            print(
-                                f"{player.name} tied dealer with {score} and made back their ante of {player.antes[-1]}"
-                            )
-                    elif score < dealer_score:
-                        if self.outs:
-                            print(
-                                f"{player.name} lost to the dealer with {score} and lost {player.antes[-1]}"
-                            )
-                    else:
-                        if score == 21:
-                            player.cash += player.antes[-1] * (3 / 2)
-                            if self.outs:
-                                print(
-                                    f"{player.name} won with blackjack and made {player.antes[-1] * (3/2)}"
-                                )
-                        else:
-                            player.cash += player.antes[-1] * 2
-                            if self.outs:
-                                print(
-                                    f"{player.name} won with {score} and made {player.antes[-1]*2}"
-                                )
-                    player.antes = player.antes[:-1]
-                    player.old_hands = player.old_hands[:-1]
+                self.compare_hands(dealer_score, player)
 
     def check_cash(self):
         """Print each player's current cash."""
