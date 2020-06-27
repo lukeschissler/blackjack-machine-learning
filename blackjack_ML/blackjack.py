@@ -1,14 +1,9 @@
-from AIs import dealer_ai, ml_ai
-from utils import (
+from blackjack_ML.AIs import dealer_ai
+from blackjack_ML.utils import (
     Deck,
     Player,
-    AiPlayer,
-    optimal_hard_hands,
-    optimal_soft_hands,
-    optimal_split_hands,
-    GameMaster,
 )
-from time import sleep
+
 
 class BlackJack:
     """Blackjack game object. Handles deck creation, dealing, playing, and turn assessment."""
