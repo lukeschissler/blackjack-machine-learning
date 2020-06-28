@@ -65,7 +65,7 @@ class Player:
         self.antes = []
         self.split = 0
 
-    def shift_stack(self) -> None:
+    def shift_stack(self, player=0) -> None:
         """Move a hand off the current stack to the out_stack."""
         self.played_hands.append(self.hands[-1])
         self.hands = self.hands[:-1]

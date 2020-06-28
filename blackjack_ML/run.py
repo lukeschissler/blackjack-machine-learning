@@ -23,17 +23,16 @@ def basic_sim():
     my_perf_ml.set_tables(
         statics.optimal_hard_hands, statics.optimal_soft_hands, statics.optimal_split_hands
     )
-    game = bj.BlackJack([my_perf_ml, dealer], deck_num=4, turns=10000, outs = False)
+    game = bj.BlackJack([my_perf_ml, dealer], deck_num=4, turns=1000, outs = False)
     game.play()
-    game.check_cash()
-    return game.players
+    #game.check_cash()
+    return game.return_player("Optimal AI")
 
 def optimal_tracking():
     results = []
     for x in range(100):
-        players = basic_sim()
-        for player in players:
-            if player.name == "Optimal AI":
-                results.append(player.cash)
+        player = basic_sim()
+        results.append(player.cash)
     print(sum(results)/len(results))
-basic_sim()
+
+optimal_tracking()
