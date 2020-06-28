@@ -1,7 +1,8 @@
-from blackjack_ML.AIs import dealer_ai
-from blackjack_ML.utils import (
+from AIs import dealer_ai, ml_ai
+from utils import (
     Deck,
     Player,
+    AiPlayer
 )
 
 
@@ -23,6 +24,11 @@ class BlackJack:
         self.ante = ante
         self.outs = outs
 
+    def return_player(self, name):
+        for player in self.players:
+            if player.name == name:
+                return player
+
     def optional_print(self, msg):
         if self.outs:
             print(msg)
@@ -36,14 +42,29 @@ class BlackJack:
         for player in self.players:
             player.hands.append(self.deck.deal(2))
 
-    def dealer_hand(self, state) -> list:
-        """Access the dealers current or played hand."""
-        for player in self.players:
-            if player.func == dealer_ai:
-                if state == "curr":
-                    return player.hands
-                if state == "played":
-                    return player.played_hands
+    def check_hand(self, player) -> None:
+        if player.hands:
+            hand_sum = self.sum_hand(player.hands[-1])
+            if 21 in hand_sum or all(j > 21 for j in hand_sum):
+                player.shift_stack()
+
+    def split_hand(self, player):
+        player.split = 1
+        player.antes.append(self.ante)
+        player.cash -= self.ante
+        player.hands = [
+            [player.hands[-1][0]] + self.deck.deal(1),
+            [player.hands[-1][1]] + self.deck.deal(1),
+        ]
+
+    def double_down_hand(self, player):
+        player.hands[-1] += self.deck.deal(1)
+        player.cash -= self.ante
+        player.antes[-1] += self.ante
+        player.shift_stack()
+
+    def hit_hand(self, player):
+        player.hands[-1] += self.deck.deal(1)
 
     def sum_hand(self, hand) -> list:
         """Return the sum(s) of a player's hand."""
@@ -61,6 +82,11 @@ class BlackJack:
         player.cash -= self.ante
         player.antes.append(self.ante)
 
+        move_dict = {'p': self.split_hand,
+                     'd': self.double_down_hand,
+                     'h': self.hit_hand,
+                     's': player.shift_stack}
+
         while player.hands:
             move = player.func(
                 hand_sum=self.sum_hand(player.hands[-1]),
@@ -72,32 +98,9 @@ class BlackJack:
             if len(player.hands[-1]) > 2 and move == "d":
                 move = "h"
 
-            if move == "p" and len(player.hands) == 1:
-                player.split = 1
-                player.antes.append(self.ante)
-                player.cash -= self.ante
-                player.hands = [
-                    [player.hands[-1][0]] + self.deck.deal(1),
-                    [player.hands[-1][1]] + self.deck.deal(1),
-                ]
+            move_dict[move](player)
 
-            elif move == "d":
-                player.hands[-1] += self.deck.deal(1)
-                player.cash -= self.ante
-                player.antes[-1] += self.ante
-                player.shift_stack()
-
-            elif move == "h":
-                player.hands[-1] += self.deck.deal(1)
-
-            else:
-                player.shift_stack()
-
-
-            if player.hands:
-                hand_sum = self.sum_hand(player.hands[-1])
-                if 21 in hand_sum or all(j > 21 for j in hand_sum):
-                    player.shift_stack()
+            self.check_hand(player)
 
     def play(self) -> None:
         """Take turns for all players, settle up, and reset for the next turn."""
@@ -105,7 +108,7 @@ class BlackJack:
         for i in range(self.turns):
             self.optional_print("\n" + "It's a new deal!")
             self.deal()
-            self.d1_card = self.dealer_hand("curr")[0][0]
+            self.d1_card = self.return_player("Dealer").hands[0][0]
 
             for player in self.players:
                 self.turn(player)
@@ -137,15 +140,13 @@ class BlackJack:
 
     def settlement(self):
         """Assess and distribute winnings from a hand."""
-        d_hand = self.dealer_hand("played")
+        d_hand = self.return_player("Dealer").played_hands
         dealer_score = max([x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])])
         self.optional_print("\n" + "The dealer's hand is {}. The dealer's score is {}".format(d_hand[0], dealer_score))
 
         for player in self.players:
             if player.func != dealer_ai:
                 self.compare_hands(dealer_score, player)
-        #sleep(3)
-
 
     def check_cash(self):
         """Print each player's current cash."""
@@ -160,8 +161,6 @@ class BlackJack:
 
 
 def main():
-    game = BlackJack(['tim', dealer_ai], 4, 10, 50, True)
-    game.play()
-
+    my_deck = Deck()
 if __name__ == "__main__":
     main()
