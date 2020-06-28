@@ -75,4 +75,3 @@ optimal_split_hands = [
     ["P", "P", "P", "P", "P", "P", "H", "H", "H", "H"],
     ["P", "P", "P", "P", "P", "P", "H", "H", "H", "H"],
 ]
-

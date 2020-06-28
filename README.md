@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.com/lukeschissler/blackjack_ML.svg?branch=master)](https://travis-ci.com/lukeschissler/blackjack_ML)
 
+<!--
 [![codecov](https://codecov.io/gh/lukeschissler/blackjack_ML/branch/master/graph/badge.svg)](https://codecov.io/gh/lukeschissler/blackjack_ML)
+-->
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/181737ec1feaa31b6765/maintainability)](https://codeclimate.com/github/lukeschissler/blackjack_ML/maintainability)
 

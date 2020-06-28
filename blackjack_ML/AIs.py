@@ -1,4 +1,3 @@
-from random import random
 from statics import hh_dict, sh_dict, sp_dict, dealer_dict
 
 
@@ -14,10 +13,6 @@ def hand_typer(hand, hand_sums, split):
         return "hard"
 
 
-def random_ai():
-    return round(random())
-
-
 def dealer_ai(**kwargs):
     """AI for a dealer. Hits up to hard 16 and on soft 17."""
     hand_sum = kwargs.get("hand_sum")
@@ -25,18 +20,6 @@ def dealer_ai(**kwargs):
         return "s"
     else:
         return "h"
-
-
-def hits_ai(**kwargs):
-    return "h"
-
-
-def dd_ai(**kwargs):
-    hand = kwargs.get("hand")
-    if len(hand) == 2:
-        if random() > 0.5:
-            return "d"
-    return "h"
 
 
 def ml_ai(**kwargs):
@@ -66,11 +49,3 @@ def ml_ai(**kwargs):
         ].lower()
     else:
         return "s"
-
-
-def main():
-    print(hh_dict)
-
-
-if __name__ == "__main__":
-    main()

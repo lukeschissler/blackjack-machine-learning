@@ -1,5 +1,6 @@
 from random import shuffle, randint, random
 
+
 class Card:
     """Card  type object. Consists of a value and a suit."""
 
@@ -21,8 +22,10 @@ class Card:
         else:
             return self.val
 
+
 class Deck:
     """The Deck object,which is a collection of Card objects. """
+
     def __init__(self, num=1) -> None:
         """Initialize  a deck with the size of deck required. """
         self.num = num
@@ -42,52 +45,16 @@ class Deck:
         """Implement more true to life deal"""
         return [self.deck.pop() for x in range(size)]
 
+class AiPlayer:
+    """Child class of player with more attr and methods to support an AI player"""
 
-class Player:
-    """Player object for the blackjack game."""
-    def __init__(self, name, cash):
-        """Initialize a player with its name, cash, hands, antes, split and optional func. Func is the AI that will play."""
+    def __init__(self, name, cash, func):
         self.name = name
         self.cash = cash
         self.hands = []
         self.played_hands = []
         self.antes = []
         self.split = 0
-        self.func = None
-
-    def __repr__(self) -> str:
-        """Customzie the outstring for the Player class."""
-        return f"{self.name}: Cash - {self.cash}, Hand - {self.hands}"
-
-    def reset(self) -> None:
-        """Reset a player for a new hand."""
-        self.played_hands = []
-        self.antes = []
-        self.split = 0
-
-    def shift_stack(self, player=0) -> None:
-        """Move a hand off the current stack to the out_stack."""
-        self.played_hands.append(self.hands[-1])
-        self.hands = self.hands[:-1]
-
-    def split_turn(self, ante) -> None:
-        self.split = 1
-        self.antes.append(ante)
-        self.cash -= ante
-
-    def double_down_turn(self, ante) -> None:
-        self.cash -= ante
-        self.antes[-1] += ante
-        self.shift_stack()
-
-    def stand_turn(self) -> None:
-        self.shift_stack()
-
-
-class AiPlayer(Player):
-    """Child class of player with more attr and methods to support an AI player"""
-    def __init__(self, name, cash, func):
-        super().__init__(name, cash)
         self.func = func
         self.fitness_table = []
 
@@ -95,10 +62,21 @@ class AiPlayer(Player):
         """Customize the outstring of the class."""
         return f"{self.name}, Fitness: {self.fitness_table}, Cash: {self.cash}"
 
+    def reset(self) -> None:
+        """Reset a player for a new hand."""
+        self.played_hands = []
+        self.antes = []
+        self.split = 0
+
     def update_fitness(self, c):
         """Update fitness table with current generation's cash."""
         self.fitness_table.append(self.cash)
         self.cash = c
+
+    def shift_stack(self, player=0) -> None:
+        """Move a hand off the current stack to the out_stack."""
+        self.played_hands.append(self.hands[-1])
+        self.hands = self.hands[:-1]
 
     def set_tables(self, hard_table, soft_table, split_table):
         """Manually enter tables for AI logic"""
@@ -125,6 +103,7 @@ class AiPlayer(Player):
 
 class GameMaster:
     """GameMaster class. Handles gameplay for multiple AIs, crossing over between generations."""
+
     def __init__(self, func, cash):
         self.models = []
         self.used_names = []
@@ -151,7 +130,7 @@ class GameMaster:
         """Crossover two parent models to generate a child model. Genetic content from each parent based on fitness ratio between parents."""
         p1_fitness = p1.fitness_table[-1]
         p2_fitness = p2.fitness_table[-1]
-        p1_ratio = 1 - abs(p1_fitness) / (abs(p1_fitness) + abs(p2_fitness)+1)
+        p1_ratio = 1 - abs(p1_fitness) / (abs(p1_fitness) + abs(p2_fitness) + 1)
         child_hhs = [[] for x in range(17)]
         child_shs = [[] for x in range(9)]
         child_phs = [[] for x in range(10)]
@@ -196,7 +175,7 @@ class GameMaster:
         else:
             return p2
 
-    def tournament_selection(self, ratio = 1):
+    def tournament_selection(self, ratio=1):
         """Cross two parents over to generate a child table. Define a ratio of children from the previous generation and newly generated models."""
 
         old_len = len(self.models)
@@ -208,17 +187,17 @@ class GameMaster:
             children.append(child)
 
         self.models = children
-        while old_len > len(self.models) :
+        while old_len > len(self.models):
             self.add_models(1)
-
 
     def first_and_last(self):
         """Return the first and last fitness measurement for each model in the object."""
         for model in self.models:
-            print(f"Model: {model.name}, First: {model.fitness_table[0]} Last: {model.fitness_table[-1]}")
+            print(
+                f"Model: {model.name}, First: {model.fitness_table[0]} Last: {model.fitness_table[-1]}"
+            )
 
-    def run_sim(self, game, turns, iter, deck_num, players = []):
-
+    def run_sim(self, game, turns, iter, deck_num, players=[]):
 
         for i in range(iter):
             for model in self.models:
@@ -228,8 +207,3 @@ class GameMaster:
 
             self.update_fitness()
             self.tournament_selection(1)
-
-
-
-if __name__ == "__main__":
-    pass

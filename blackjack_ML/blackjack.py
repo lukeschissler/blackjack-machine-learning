@@ -1,9 +1,5 @@
 from AIs import dealer_ai, ml_ai
-from utils import (
-    Deck,
-    Player,
-    AiPlayer
-)
+from utils import Deck, AiPlayer
 
 
 class BlackJack:
@@ -77,15 +73,17 @@ class BlackJack:
                 sums = [x + int(card.return_val()) for x in sums]
         return sorted(set(sums))
 
-    def turn(self, player: Player) -> None:
+    def turn(self, player) -> None:
         """Play a turn of blackjack.  Breaks when there are no moves to make or the player stands on all hands."""
         player.cash -= self.ante
         player.antes.append(self.ante)
 
-        move_dict = {'p': self.split_hand,
-                     'd': self.double_down_hand,
-                     'h': self.hit_hand,
-                     's': player.shift_stack}
+        move_dict = {
+            "p": self.split_hand,
+            "d": self.double_down_hand,
+            "h": self.hit_hand,
+            "s": player.shift_stack,
+        }
 
         while player.hands:
             move = player.func(
@@ -125,24 +123,39 @@ class BlackJack:
                 score = []
 
             if not score:
-                self.optional_print(f"{player.name} busted with {score} and lost {ante}")
+                self.optional_print(
+                    f"{player.name} busted with {score} and lost {ante}"
+                )
             elif score == dealer_score:
                 player.cash += ante
-                self.optional_print(f"{player.name} tied dealer with {score} and made back their ante of {ante}")
+                self.optional_print(
+                    f"{player.name} tied dealer with {score} and made back their ante of {ante}"
+                )
             elif score < dealer_score:
-                self.optional_print(f"{player.name} lost to the dealer with {score} and lost {ante}")
+                self.optional_print(
+                    f"{player.name} lost to the dealer with {score} and lost {ante}"
+                )
             elif score == 21 and len(hand) == 2:
                 player.cash += ante + ante * (3 / 2)
-                self.optional_print(f"{player.name} won with blackjack and made {ante +ante * (3 / 2)}")
+                self.optional_print(
+                    f"{player.name} won with blackjack and made {ante +ante * (3 / 2)}"
+                )
             else:
                 player.cash += ante * 2
-                self.optional_print(f"{player.name} won with {score} and made {ante * 2}")
+                self.optional_print(
+                    f"{player.name} won with {score} and made {ante * 2}"
+                )
 
     def settlement(self):
         """Assess and distribute winnings from a hand."""
         d_hand = self.return_player("Dealer").played_hands
         dealer_score = max([x if x < 22 else 0 for x in self.sum_hand(d_hand[-1])])
-        self.optional_print("\n" + "The dealer's hand is {}. The dealer's score is {}".format(d_hand[0], dealer_score))
+        self.optional_print(
+            "\n"
+            + "The dealer's hand is {}. The dealer's score is {}".format(
+                d_hand[0], dealer_score
+            )
+        )
 
         for player in self.players:
             if player.func != dealer_ai:
@@ -158,9 +171,3 @@ class BlackJack:
         """Reset each player in the game for the next turn."""
         for player in self.players:
             player.reset()
-
-
-def main():
-    my_deck = Deck()
-if __name__ == "__main__":
-    main()
